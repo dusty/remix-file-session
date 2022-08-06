@@ -1,7 +1,11 @@
 import type { ActionArgs, LoaderArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
-import { commitSession, getUserSession } from "~/session.server";
+import {
+  commitSession,
+  destroySession,
+  getUserSession,
+} from "~/session.server";
 
 export async function loader(args: LoaderArgs) {
   const session = await getUserSession(args.request);
@@ -14,10 +18,17 @@ export async function loader(args: LoaderArgs) {
 
 export async function action(args: ActionArgs) {
   const session = await getUserSession(args.request);
-  session.flash("message", "this is a message");
-  return redirect("/", {
-    headers: { "set-cookie": await commitSession(session) },
-  });
+  const formData = await args.request.formData();
+  switch (formData.get("_action")) {
+    case "thing":
+      session.flash("message", "this is a message");
+      return redirect("/", {
+        headers: { "set-cookie": await commitSession(session) },
+      });
+    case "del":
+      await destroySession(session);
+      return redirect("/");
+  }
 }
 
 export default function Index() {
@@ -25,8 +36,11 @@ export default function Index() {
   console.log("SESSION", session);
   return (
     <Form method="post">
-      <button name="thing" value="stuff">
-        Submit
+      <button name="_action" value="thing">
+        Submit A Thing
+      </button>
+      <button name="_action" value="del">
+        Delete Session
       </button>
     </Form>
   );
