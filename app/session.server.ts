@@ -1,4 +1,5 @@
-import { createCookie, createFileSessionStorage } from "@remix-run/node";
+import { createCookie } from "@remix-run/node";
+import { createFileSessionStorage } from "./storage";
 
 const sessionCookie = createCookie("__session", {
   secure: process.env.NODE_ENV === "production",
